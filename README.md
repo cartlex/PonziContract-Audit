@@ -105,6 +105,7 @@ Remove `ownerWithdraw()` function.
 # LOW FINDINGS
 ## 4. Use newer solidity version.
 ## Description 
+When deploying contracts, you should use the latest released version of Solidity. Apart from exceptional cases, only the latest version receives security fixes.
 
 ## 5. Using ++i instead of i++ save gas.
 https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L18
