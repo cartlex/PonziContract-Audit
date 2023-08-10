@@ -20,7 +20,7 @@ contract PonziContractTest is Test {
         vm.deal(address(person1), ETHER_TO_TRANSFER);
         vm.deal(address(person2), ETHER_TO_TRANSFER);
         vm.deal(address(person3), ETHER_TO_TRANSFER);
-        // vm.deal(address(ponziContract), ETHER_TO_TRANSFER);
+        vm.deal(address(ponziContract), ETHER_TO_TRANSFER);
     }
 
     function testDeploy() public {
@@ -35,17 +35,19 @@ contract PonziContractTest is Test {
     }
 
     function testOwnerWithdraw() public { // @audit rugpull
+        uint256 multiplier = 2;
+
         vm.startPrank(person1);
         address ponziContractAddress = address(ponziContract);
-        assertEq(ponziContractAddress.balance, 0);
+        assertEq(ponziContractAddress.balance, ETHER_TO_TRANSFER);
         assertEq(owner.balance, 0);
 
         ponziContractAddress.call{value: ETHER_TO_TRANSFER}("");
-        assertEq(ponziContractAddress.balance, ETHER_TO_TRANSFER);
+        assertEq(ponziContractAddress.balance, ETHER_TO_TRANSFER * multiplier);
         changePrank(owner);
         // Owner can withdraw money in anytime
         ponziContract.ownerWithdraw(address(owner), ponziContractAddress.balance);
-        assertEq(owner.balance, ETHER_TO_TRANSFER);
+        assertEq(owner.balance, ETHER_TO_TRANSFER * multiplier);
     }
 
     function testBuyOwnerRole() public { // @audit risk of stealing owners rigths
@@ -56,9 +58,10 @@ contract PonziContractTest is Test {
         assertEq(address(person1).balance, ETHER_TO_TRANSFER);
 
         changePrank(person1);
+        // person1 buying contract owner position
         ponziContract.buyOwnerRole{value: ETHER_TO_TRANSFER}(address(person1));
         assertEq(ponziContract.owner(), address(person1));
-
+        // person1 withdraw funds from contract.
         ponziContract.ownerWithdraw(address(person1), address(ponziContract).balance);
         assertEq(address(person1).balance, ETHER_TO_TRANSFER * multiplier);
         vm.stopPrank();
