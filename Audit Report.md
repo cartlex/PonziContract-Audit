@@ -1,4 +1,7 @@
+# Ponzi Contract Audit.
+
 # 1. Stealing owner's rights and user's funds.
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L50-L53
 ## Description
 In `PonziContract.sol` there is a function `buyOwnerRole()`. It's possible for any user to call it and claim an owner's rigths for 10 ether.
 ```
@@ -33,6 +36,7 @@ Remove possibility to buy owners rigths.
 
 
 # 2. Users lost their funds calling `JoinPonzi()` function.
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L32-L48
 ## Description
 In `PonziContract.sol` there is a function `joinPonzi()`. Calling this function has no effect for user except just waste gas. One possible attack that owner can add himself twice or more into `_afilliates` array and user just lose his funds.
 ```
@@ -86,7 +90,7 @@ function testJoinPonziOwnerScam() public {
 ```
 
 # 3. Rugpull. Owner can steal funds from contract.
-
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L55-L58
 ## Description
 Owner of the `PonziContract.sol` can withdraw funds from the contract anytime calling `ownerWithdraw()` function.
 ```
@@ -103,23 +107,59 @@ Remove `ownerWithdraw()` function.
 ## Description 
 
 ## 5. Using ++i instead of i++ save gas.
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L18
 ```
-for (uint256 i = 0; i < affiliatesCount; i++) { // @audit cheaper to use uchecked ++i
+    for (uint256 i = 0; i < affiliatesCount; i++) { 
+```
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L41C9-L41C59
+```
+    for (uint256 i = 0; i < _afilliates.length; i++) {
 ```
 
 ## 6. Using `unchecked` block in `for` loop since it impossible to underflow.
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L18
 ```
-for (uint256 i = 0; i < affiliatesCount; ) { // @audit cheaper to use uchecked block
-unchecked {
-    i++;
-}
+    for (uint256 i = 0; i < affiliatesCount;) { 
+        ...
+        unchecked {
+            i++;
+        }
+```
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L41C9-L41C59
+```
+    for (uint256 i = 0; i < _afilliates.length;) {
+        ...
+        unchecked {
+            i++;
+        }
 ```
 
 ## 7. Not using empty `receive()` function. Users can lost their funds sending it to contract.
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L66
 ```
-    receive() external payable {} // @audit lost funds risk
+    receive() external payable {}
 ```
-## 8. Using + instead of += is cheaper. Same for -=
+## 8. Using + instead of += is cheaper.
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L44
 ```
-        affiliatesCount += 1; // @audit affiliatesCount = affiliatesCount + 1 is cheaper
+    affiliatesCount += 1; 
+```
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L61
+```
+    affiliatesCount += 1;
+```
+
+## 9. Using custom errors cheaper than require.
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L23
+```
+    require(affiliate == true, "Not an Affiliate!");
+```
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L39-L40
+```
+    require(_afilliates.length == affiliatesCount, "Invalid length");
+    require(msg.value == affiliatesCount * 1 ether, "Insufficient Ether");
+```
+https://github.com/cartlex/PonziContract-Audit/blob/14eef76f48e70c6a2fb10c20a3148d95da6d6b8d/src/PonziContract/PonziContract.sol#L51
+```
+    require(msg.value == 10 ether, "Invalid Ether amount");
 ```
